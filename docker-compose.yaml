@@ -13,5 +13,20 @@ services:
     volumes:
       - mysqldata:/var/lib/mysql
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: mysql
+      DB_PASSWORD: password
+      DB_DATABASE: momos
+
 volumes:
   mysqldata:
