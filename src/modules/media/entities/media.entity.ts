@@ -40,4 +40,10 @@ export class Media {
         type: 'timestamp',
     })
     updated_at: Date;
+
+    @Column({ type: 'text', nullable: true })
+    images: string;
+
+    @Column({ type: 'text', nullable: true })
+    videos: string;
 }
