@@ -1,14 +1,9 @@
-import { IsOptional, IsString, IsIn, IsNumber, IsPositive } from 'class-validator';
-import { MediaType } from '../entities/media.entity';
+import { IsOptional, IsString, IsIn, IsPositive } from 'class-validator';
 
 export class QueryMediaDto {
   @IsOptional()
   @IsString()
   title?: string;
-
-  @IsOptional()
-  @IsIn(Object.values(MediaType), { message: 'Type must be one of: image, video' })
-  type?: MediaType;
 
   @IsOptional()
   @IsString()

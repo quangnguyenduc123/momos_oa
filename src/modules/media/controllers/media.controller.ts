@@ -1,7 +1,6 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { MediaService } from '../services/media.service';
 import { CreateMediaDto } from '../dto/create-media.dto';
-import { Media } from '../entities/media.entity';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('media')
@@ -10,7 +9,8 @@ export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
   @Post()
-  async createMedia(@Body() createMediaDto: CreateMediaDto): Promise<Media> {
+  @HttpCode(HttpStatus.OK)
+  async createMedia(@Body() createMediaDto: CreateMediaDto) {
     return this.mediaService.createMedia(createMediaDto);
   }
 }

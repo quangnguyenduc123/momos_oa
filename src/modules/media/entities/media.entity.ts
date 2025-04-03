@@ -6,26 +6,15 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 
-export enum MediaType {
-    IMAGE = 'Image',
-    VIDEO = 'Video',
-}
-
 @Entity('media')
 export class Media {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({
-        type: 'enum',
-        enum: MediaType,
-    })
-    type: MediaType;
-
     @Column({ type: 'varchar', length: 255 })
     url: string;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: 'varchar', length: 255, nullable: true })
     title: string;
 
     @Column({ type: 'text', nullable: true })

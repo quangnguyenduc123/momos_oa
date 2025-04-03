@@ -1,27 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Like, Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Media } from '../entities/media.entity';
 import { CreateMediaDto } from '../dto/create-media.dto';
 import { QueryMediaDto } from '../dto/query-media.dto';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class MediaService {
   constructor(
     @InjectRepository(Media)
     private readonly mediaRepository: Repository<Media>,
+    @InjectQueue('media-crawler')
+    private readonly mediaCrawlerQueue: Queue
   ) {}
 
-  async createMedia(createMediaDto: CreateMediaDto): Promise<Media> {
-    const media = this.mediaRepository.create(createMediaDto);
-    return this.mediaRepository.save(media);
+  async createMedia(createMediaDto: CreateMediaDto): Promise<{ jobId: string | number }> {
+    console.log("serviceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+    const job = await this.mediaCrawlerQueue.add('crawl-media', createMediaDto, {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+      },
+    });
+
+    return { jobId: job.id };
   }
 
   async queryMedia(query: QueryMediaDto): Promise<Media[]> {
     return await this.mediaRepository.find({
       select: {
         id: true,
-        type: true,
         url: true,
         title: true,
         description: true,
@@ -34,7 +44,6 @@ export class MediaService {
       where: {
         ...(query.title && { title: Like(`%${query.title}%`) }),
         ...(query.description && { description: Like(`%${query.description}%`) }),
-        ...(query.type && { title: query.title }),
       }
     });
   }

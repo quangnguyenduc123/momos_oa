@@ -1,44 +1,60 @@
 import { Process, Processor } from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Media } from '../media/entities/media.entity';
+import { Repository } from 'typeorm';
+import { MediaJobData } from './queue.types';
+import { PinoLoggerService } from 'src/logger/pino-logger.service';
 
-@Processor('media')
-export class MediaProcessorService {
-  private readonly logger = new Logger(MediaProcessorService.name);
+@Processor('media-crawler')
+export class MediaCrawlerProcessor {
+  constructor(
+    @InjectRepository(Media)
+    private readonly mediaRepository: Repository<Media>,
+    private readonly logger: PinoLoggerService,
+  ) {
+  }
+  @Process('crawl-media')
+  async handleCrawlMedia(job: Job<MediaJobData>) {
+    try {
+      const { url, title, description } = job.data;
+      const response = await axios.get(url);
+      const $ = cheerio.load(response.data);
 
-  @Process('process')
-  async processMedia(job: Job<any>) {
-    this.logger.debug(`Processing media job ${job.id}`);
-    this.logger.debug(`Data: ${JSON.stringify(job.data)}`);
-    
-    // Example job processing logic:
-    // 1. Extract data from job
-    const { mediaId, action } = job.data;
-    
-    // 2. Process based on action
-    switch(action) {
-      case 'resize':
-        await this.resizeMedia(mediaId);
-        break;
-      case 'convert':
-        await this.convertMedia(mediaId);
-        break;
-      default:
-        this.logger.warn(`Unknown action: ${action}`);
+      const mediaUrls = {
+        images: [] as string[],
+        videos: [] as string[]
+      };
+
+      // Find images
+      $('img').each((_, element) => {
+        const imgUrl = $(element).attr('src');
+        if (imgUrl) mediaUrls.images.push(imgUrl);
+      });
+
+      // Find videos
+      $('video source').each((_, element) => {
+        const videoUrl = $(element).attr('src');
+        if (videoUrl) mediaUrls.videos.push(videoUrl);
+      });
+
+      const media = this.mediaRepository.create({
+        url,
+        title,
+        description,
+        images: JSON.stringify(mediaUrls.images),
+        videos: JSON.stringify(mediaUrls.videos),
+      });
+
+      await this.mediaRepository.save(media);
+    } catch (error) {
+      this.logger.error(
+        `Failed to crawl media: ${error.message}`,
+        error.stack,
+        'MediaCrawler'
+      );
     }
-
-    return { processed: true, mediaId };
-  }
-
-  private async resizeMedia(id: number) {
-    this.logger.log(`Resizing media with ID: ${id}`);
-    // Actual resizing logic would go here
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate work
-  }
-
-  private async convertMedia(id: number) {
-    this.logger.log(`Converting media with ID: ${id}`);
-    // Actual conversion logic would go here
-    await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate work
   }
 }

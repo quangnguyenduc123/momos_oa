@@ -6,15 +6,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import typeorm from './config/typeorm';
 import { MediaModule } from './modules/media/media.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BullModule } from '@nestjs/bull';
+import { getBullConfig } from './config/bullmq';
+import { HealthCheckModule } from './modules/heath-check/health-check.module';
 
 @Module({
   imports: [
     AuthModule,
     MediaModule,
+    HealthCheckModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [typeorm],
     }),
+    BullModule.forRoot(getBullConfig()),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {

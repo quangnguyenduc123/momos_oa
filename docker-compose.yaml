@@ -12,6 +12,12 @@ services:
       - "3306:3306"
     volumes:
       - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "mysql", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
       
   redis:
     image: redis:7-alpine
@@ -20,6 +26,11 @@ services:
     volumes:
       - redisdata:/data
     command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
 
   app:
     build:
@@ -28,9 +39,12 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
+      NODE_ENV: development
       DB_HOST: db
       DB_PORT: 3306
       DB_USERNAME: mysql
@@ -38,7 +52,20 @@ services:
       DB_DATABASE: momos
       REDIS_HOST: redis
       REDIS_PORT: 6379
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   mysqldata:
+    driver: local
   redisdata:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
