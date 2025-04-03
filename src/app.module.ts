@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './modules/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import typeorm from './config/typeorm';
+import { MediaModule } from './modules/media/media.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
     AuthModule,
+    MediaModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [typeorm],
