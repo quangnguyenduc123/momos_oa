@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-const BASE_URL = 'http://momos_oa-app-1:3000';
+const BASE_URL = 'http://load_balancer';
 
 // User credentials
 const USERNAME = 'quang';
@@ -27,8 +27,9 @@ export function setup() {
 
 // Load test
 export const options = {
-    vus: 5000,  // 5000 concurrent virtual users
-    duration: '1s',
+    stages: [
+        { duration: '1m', target: 5000 },
+    ],
 };
 
 export default function (data) {
