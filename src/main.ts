@@ -9,6 +9,14 @@ async function bootstrap() {
   const httpAdapter = app.get(HttpAdapterHost);
   const logger = app.get(PinoLoggerService);
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter, logger));
+
+  // Enable CORS
+  app.enableCors({
+    origin: 'http://localhost:3000', 
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
