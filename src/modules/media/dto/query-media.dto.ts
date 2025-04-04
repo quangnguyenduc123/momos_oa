@@ -1,23 +1,20 @@
 import { IsOptional, IsString, IsIn, IsPositive } from 'class-validator';
 
 export class QueryMediaDto {
-  @IsOptional()
-  @IsString()
-  title?: string;
 
   @IsOptional()
   @IsString()
-  description?: string;
+  search?: string;
 
   @IsOptional()
   @IsIn(['asc', 'desc'], { message: 'Sort must be either "asc" or "desc"' })
-  sort?: 'asc' | 'desc';
+  sort: 'asc' | 'desc' = 'asc';
 
   @IsOptional()
   @IsPositive()
-  limit?: number;
+  limit: number = 10;
 
   @IsOptional()
   @IsPositive()
-  offset?: number;
+  offset: number = 0;
 }

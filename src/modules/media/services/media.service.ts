@@ -27,8 +27,8 @@ export class MediaService {
     return { jobId: job.id };
   }
 
-  async queryMedia(query: QueryMediaDto): Promise<Media[]> {
-    return await this.mediaRepository.find({
+  async queryMedia(query: QueryMediaDto): Promise<{ total: number; data: Media[] }> {
+    const [data, total] = await this.mediaRepository.findAndCount({
       select: {
         id: true,
         url: true,
@@ -40,10 +40,16 @@ export class MediaService {
       },
       take: query.limit || 10,
       skip: query.offset || 0,
-      where: {
-        ...(query.title && { title: Like(`%${query.title}%`) }),
-        ...(query.description && { description: Like(`%${query.description}%`) }),
-      }
+      where: [
+        ...(query.search
+          ? [
+              { title: Like(`%${query.search}%`) },
+              { description: Like(`%${query.search}%`) },
+            ]
+          : [{}]),
+      ],
     });
+  
+    return { total, data };
   }
 }
