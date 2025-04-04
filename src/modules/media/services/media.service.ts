@@ -17,7 +17,6 @@ export class MediaService {
   ) {}
 
   async createMedia(createMediaDto: CreateMediaDto): Promise<{ jobId: string | number }> {
-    console.log("serviceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
     const job = await this.mediaCrawlerQueue.add('crawl-media', createMediaDto, {
       attempts: 3,
       backoff: {

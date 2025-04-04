@@ -17,7 +17,6 @@ export class AuthService {
         const user = await this.userRepository.findOne({ where: { username } });
         if (user) {
             const match = await bcrypt.compare(password, user.hashPassword);
-            console.log('match', match);
             if (match) return user;
         };
         throw new UnauthorizedException('Invalid credentials');

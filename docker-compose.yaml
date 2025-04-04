@@ -60,6 +60,17 @@ services:
       retries: 3
       start_period: 40s
 
+  load-test:
+    image: grafana/k6
+    volumes:
+      - ./k6-scripts:/scripts
+    entrypoint: ["k6", "run", "/scripts/script.js"]
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - default
+
 volumes:
   mysqldata:
     driver: local
